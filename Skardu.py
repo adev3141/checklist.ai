@@ -175,12 +175,34 @@ def infer_season(date):
 
 # Generate PDF
 def generate_pdf(checklist_text, logo_path):
-    ...
+     # Replace unsupported characters with alternatives
+    checklist_text = checklist_text.replace('\u2013', '-').replace('\u2014', '--')
+
+    subtitle = "\n\nNote: This checklist is AI-generated and may be subject to change."
+    complete_text = checklist_text + subtitle
+    
+    class PDF(FPDF):
+        def header(self):
+            self.image(logo_path, 10, 8, 33)  # Adjust the position and size as needed
+            self.set_font("Arial", 'B', 12)
+            self.cell(0, 10, 'Itinerary', ln=True, align='C')
+            self.ln(20)
+    
+    pdf = PDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, complete_text.encode('latin-1', 'replace').decode('latin-1'))
+    
     return pdf.output(dest='S').encode('latin-1')
 
-# Format checklist for display
 def format_checklist(checklist):
-    ...
+    # Splitting the generated checklist by lines and reformatting it as HTML
+    items = checklist.split('##')
+    formatted_checklist = ""
+    for item in items:
+        if item.strip():
+            formatted_checklist += f"<div class='itinerary'>{item.strip()}</div>"
+    formatted_checklist += "<div class='itinerary'><p><em>Note: This checklist is AI-generated and may be subject to change.</em></p></div>"
     return formatted_checklist
 
 # Main interaction flow
