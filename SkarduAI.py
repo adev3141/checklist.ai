@@ -198,6 +198,21 @@ def format_checklist(checklist):
     formatted_checklist += "<div class='itinerary'><p><em>Note: This checklist is AI-generated and may be subject to change.</em></p></div>"
     return formatted_checklist
 
+# Function to make a field blink red
+def blink_field(field_key):
+    js_code = f"""
+    <script>
+    var field = document.querySelectorAll('[key="{field_key}"]');
+    if (field.length > 0) {{
+        for (var i = 0; i < 3; i++) {{
+            setTimeout(function() {{ field[0].classList.add('error'); }}, i * 300);
+            setTimeout(function() {{ field[0].classList.remove('error'); }}, i * 600 + 300);
+        }}
+    }}
+    </script>
+    """
+    st.markdown(js_code, unsafe_allow_html=True)
+
 # Main interaction flow
 if submit_button:
     # Check for missing fields
