@@ -256,7 +256,7 @@ if submit_button:
         # Infer season based on start date
         inferred_season = infer_season(start_date)
 
-        st.write("Generating your customized checklist...")
+        st.write("Musafir AI is customizing your checklist...")
         prompt = gemini_model.create_prompt(responses, num_days, inferred_season)
         st.session_state.checklist = gemini_model.generate_checklist(prompt)
 
