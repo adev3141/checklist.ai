@@ -4,7 +4,6 @@ from fpdf import FPDF
 import datetime
 
 # Custom CSS for the design system
-# Custom CSS for the design system
 st.markdown(
     """
     <style>
@@ -88,6 +87,9 @@ st.markdown(
         text-align: center;
         padding: 10px;
         font-size: 0.9em;
+    }
+    .error {
+        border: 2px solid red;
     }
     </style>
     """,
