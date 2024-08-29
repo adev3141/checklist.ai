@@ -256,16 +256,17 @@ if not st.session_state.get('checklist'):  # Only show the form if the checklist
             # Infer season based on start date
             inferred_season = infer_season(start_date)
 
-            st.write("Generating your customized checklist...")
+            st.write("Musafir AI is customizing your checklist...")
             prompt = gemini_model.create_prompt(responses, num_days, inferred_season)
             st.session_state.checklist = gemini_model.generate_checklist(prompt)
 
 # Display the checklist if it has been generated
 if st.session_state.get('checklist'):
+    responses = st.session_state.responses
     formatted_checklist = format_checklist(st.session_state.checklist)
     
     # Display the checklist
-    st.markdown(f'<div class="itinerary"><h4>Travel Checklist for {st.session_state.responses["destination"]} ({num_days} days, {inferred_season})</h4>{formatted_checklist}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="itinerary"><h4>Travel Checklist for {responses["destination"]} ({num_days} days, {inferred_season})</h4>{formatted_checklist}</div>', unsafe_allow_html=True)
 
     # Generate and provide a download link for the PDF
     logo_path = "logo/logo.png"
