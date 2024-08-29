@@ -123,40 +123,6 @@ if 'checklist' not in st.session_state:
 
 gemini_model = GeminiModel()
 
-# Questions and inputs inside a form
-with st.form(key='travel_form'):
-    st.markdown('<div class="question">Where are you planning to travel in Pakistan?</div>', unsafe_allow_html=True)
-    destination = st.text_input("", key="destination", label_visibility="hidden")
-
-    st.markdown('<div class="question">When will your trip start?</div>', unsafe_allow_html=True)
-    start_date = st.date_input("", key="start_date", label_visibility="hidden")
-
-    st.markdown('<div class="question">How many nights will you be staying?</div>', unsafe_allow_html=True)
-    nights = st.number_input("", key="nights", label_visibility="hidden", min_value=1)
-
-    st.markdown('<div class="question">What type of trip are you planning?</div>', unsafe_allow_html=True)
-    trip_type = st.selectbox("", ["Adventure", "Leisure", "Family", "Business"], key="trip_type", label_visibility="hidden")
-
-    st.markdown('<div class="question">How many people are traveling with you?</div>', unsafe_allow_html=True)
-    group_size = st.number_input("", key="group_size", label_visibility="hidden", min_value=1)
-
-    st.markdown('<div class="question">Any special considerations?</div>', unsafe_allow_html=True)
-    special_considerations = st.selectbox("", [
-        "None",
-        "I have a child with me",
-        "I have a motor disability",
-        "I have dietary restrictions (e.g., vegetarian, halal, gluten-free)",
-        "I require wheelchair access",
-        "I need medical assistance (e.g., carrying medications, first aid)",
-        "I prefer low-altitude destinations",
-        "I am traveling with a pet",
-        "I have a fear of heights",
-        "I prefer shorter walking distances",
-        "I need quiet or noise-sensitive environments"
-    ], key="special_considerations", label_visibility="hidden")
-
-    submit_button = st.form_submit_button(label='Generate Checklist')
-
 # Function to infer season based on date
 def infer_season(date):
     if date.month in [12, 1, 2]:
