@@ -216,65 +216,100 @@ def blink_field(field_key):
     st.markdown(js_code, unsafe_allow_html=True)
 
 # Main interaction flow
-if submit_button:
-    # Check for missing fields
-    missing_fields = []
-    if not destination:
-        missing_fields.append("destination")
-    if not start_date:
-        missing_fields.append("start_date")
-    if not nights:
-        missing_fields.append("nights")
-    if not trip_type:
-        missing_fields.append("trip_type")
-    if not group_size:
-        missing_fields.append("group_size")
-    if not special_considerations:
-        missing_fields.append("special_considerations")
+if not st.session_state.get('checklist'):  # Only show the form if the checklist hasn't been generated
+    with st.form(key='travel_form'):
+        st.markdown('<div class="question">Where are you planning to travel in Pakistan?</div>', unsafe_allow_html=True)
+        destination = st.text_input("", key="destination", label_visibility="hidden")
 
-    if missing_fields:
-        st.error("Missing information. Please fill in all fields.")
-        for field in missing_fields:
-            blink_field(field)
-    else:
-        responses = {
-            'destination': destination,
-            'start_date': start_date,
-            'nights': nights,
-            'trip_type': trip_type,
-            'group_size': group_size,
-            'special_considerations': special_considerations
-        }
-        st.session_state.responses = responses
+        st.markdown('<div class="question">When will your trip start?</div>', unsafe_allow_html=True)
+        start_date = st.date_input("", key="start_date", label_visibility="hidden")
 
-        # Calculate the number of days based on start date and nights
-        start_date = responses['start_date']
-        nights = int(responses['nights'])
-        end_date = start_date + datetime.timedelta(days=nights)
-        num_days = (end_date - start_date).days + 1
+        st.markdown('<div class="question">How many nights will you be staying?</div>', unsafe_allow_html=True)
+        nights = st.number_input("", key="nights", label_visibility="hidden", min_value=1)
 
-        # Infer season based on start date
-        inferred_season = infer_season(start_date)
+        st.markdown('<div class="question">What type of trip are you planning?</div>', unsafe_allow_html=True)
+        trip_type = st.selectbox("", ["Adventure", "Leisure", "Family", "Business"], key="trip_type", label_visibility="hidden")
 
-        st.write("Musafir AI is customizing your checklist...")
-        prompt = gemini_model.create_prompt(responses, num_days, inferred_season)
-        st.session_state.checklist = gemini_model.generate_checklist(prompt)
+        st.markdown('<div class="question">How many people are traveling with you?</div>', unsafe_allow_html=True)
+        group_size = st.number_input("", key="group_size", label_visibility="hidden", min_value=1)
 
-        formatted_checklist = format_checklist(st.session_state.checklist)
-        
-        # Display the checklist
-        st.markdown(f'<div class="itinerary"><h4>Travel Checklist for {responses["destination"]} ({num_days} days, {inferred_season})</h4>{formatted_checklist}</div>', unsafe_allow_html=True)
+        st.markdown('<div class="question">Any special considerations?</div>', unsafe_allow_html=True)
+        special_considerations = st.selectbox("", [
+            "None",
+            "I have a child with me",
+            "I have a motor disability",
+            "I have dietary restrictions (e.g., vegetarian, halal, gluten-free)",
+            "I require wheelchair access",
+            "I need medical assistance (e.g., carrying medications, first aid)",
+            "I prefer low-altitude destinations",
+            "I am traveling with a pet",
+            "I have a fear of heights",
+            "I prefer shorter walking distances",
+            "I need quiet or noise-sensitive environments"
+        ], key="special_considerations", label_visibility="hidden")
 
-        # Generate and provide a download link for the PDF
-        if st.session_state.checklist:
-            logo_path = "logo/logo.png"
-            pdf_content = generate_pdf(st.session_state.checklist, logo_path)
-            st.download_button(
-                label="Download Checklist as PDF",
-                data=pdf_content,
-                file_name=f"checklist_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-                mime="application/pdf"
-            )
+        submit_button = st.form_submit_button(label='Generate Checklist')
+
+    if submit_button:
+        # Check for missing fields
+        missing_fields = []
+        if not destination:
+            missing_fields.append("destination")
+        if not start_date:
+            missing_fields.append("start_date")
+        if not nights:
+            missing_fields.append("nights")
+        if not trip_type:
+            missing_fields.append("trip_type")
+        if not group_size:
+            missing_fields.append("group_size")
+        if not special_considerations:
+            missing_fields.append("special_considerations")
+
+        if missing_fields:
+            st.error("Missing information. Please fill in all fields.")
+            for field in missing_fields:
+                blink_field(field)
+        else:
+            responses = {
+                'destination': destination,
+                'start_date': start_date,
+                'nights': nights,
+                'trip_type': trip_type,
+                'group_size': group_size,
+                'special_considerations': special_considerations
+            }
+            st.session_state.responses = responses
+
+            # Calculate the number of days based on start date and nights
+            start_date = responses['start_date']
+            nights = int(responses['nights'])
+            end_date = start_date + datetime.timedelta(days=nights)
+            num_days = (end_date - start_date).days + 1
+
+            # Infer season based on start date
+            inferred_season = infer_season(start_date)
+
+            st.write("Generating your customized checklist...")
+            prompt = gemini_model.create_prompt(responses, num_days, inferred_season)
+            st.session_state.checklist = gemini_model.generate_checklist(prompt)
+
+# Display the checklist if it has been generated
+if st.session_state.get('checklist'):
+    formatted_checklist = format_checklist(st.session_state.checklist)
+    
+    # Display the checklist
+    st.markdown(f'<div class="itinerary"><h4>Travel Checklist for {st.session_state.responses["destination"]} ({num_days} days, {inferred_season})</h4>{formatted_checklist}</div>', unsafe_allow_html=True)
+
+    # Generate and provide a download link for the PDF
+    logo_path = "logo/logo.png"
+    pdf_content = generate_pdf(st.session_state.checklist, logo_path)
+    st.download_button(
+        label="Download Checklist as PDF",
+        data=pdf_content,
+        file_name=f"checklist_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+        mime="application/pdf"
+    )
 
 # Footer
 st.markdown('<div class="footer">All rights reserved | Created by ADev</div>', unsafe_allow_html=True)
