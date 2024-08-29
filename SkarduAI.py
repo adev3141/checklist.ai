@@ -115,9 +115,9 @@ with st.expander("Instructions"):
     6. Provide any special considerations.
     """)
 
+placeholder = st.empty()
+
 # Initialize session state
-if 'responses' not in st.session_state:
-    st.session_state['responses'] = {}
 if 'checklist' not in st.session_state:
     st.session_state['checklist'] = ""
 
@@ -181,9 +181,9 @@ def blink_field(field_key):
     """
     st.markdown(js_code, unsafe_allow_html=True)
 
-# Main interaction flow
-if not st.session_state.get('checklist'):  # Only show the form if the checklist hasn't been generated
-    with st.form(key='travel_form'):
+## Only show the form if the checklist hasn't been generated
+if not st.session_state['checklist']:
+    with placeholder.form(key='travel_form'):
         st.markdown('<div class="question">Where are you planning to travel in Pakistan?</div>', unsafe_allow_html=True)
         destination = st.text_input("", key="destination", label_visibility="hidden")
 
@@ -234,8 +234,6 @@ if not st.session_state.get('checklist'):  # Only show the form if the checklist
 
         if missing_fields:
             st.error("Missing information. Please fill in all fields.")
-            for field in missing_fields:
-                blink_field(field)
         else:
             responses = {
                 'destination': destination,
@@ -245,7 +243,7 @@ if not st.session_state.get('checklist'):  # Only show the form if the checklist
                 'group_size': group_size,
                 'special_considerations': special_considerations
             }
-            st.session_state.responses = responses
+            st.session_state['responses'] = responses
 
             # Calculate the number of days based on start date and nights
             start_date = responses['start_date']
@@ -256,27 +254,39 @@ if not st.session_state.get('checklist'):  # Only show the form if the checklist
             # Infer season based on start date
             inferred_season = infer_season(start_date)
 
-            st.write("Musafir AI is customizing your checklist...")
-            prompt = gemini_model.create_prompt(responses, num_days, inferred_season)
-            st.session_state.checklist = gemini_model.generate_checklist(prompt)
+            # Display the customizing message while generating the checklist
+            st.write("Musafir AI is customizing your travel checklist...")
+
+            st.session_state['prompt'] = gemini_model.create_prompt(responses, num_days, inferred_season)
+            st.session_state['checklist'] = gemini_model.generate_checklist(st.session_state['prompt'])
+            st.session_state['num_days'] = num_days
+            st.session_state['inferred_season'] = inferred_season
+
+            placeholder.empty()  # Clear the form once the checklist is generated
+
+
+            
 
 # Display the checklist if it has been generated
 if st.session_state.get('checklist'):
-    responses = st.session_state.responses
-    formatted_checklist = format_checklist(st.session_state.checklist)
+    responses = st.session_state['responses']
+    num_days = st.session_state['num_days']
+    inferred_season = st.session_state['inferred_season']
+    formatted_checklist = format_checklist(st.session_state['checklist'])
     
     # Display the checklist
     st.markdown(f'<div class="itinerary"><h4>Travel Checklist for {responses["destination"]} ({num_days} days, {inferred_season})</h4>{formatted_checklist}</div>', unsafe_allow_html=True)
 
     # Generate and provide a download link for the PDF
     logo_path = "logo/logo.png"
-    pdf_content = generate_pdf(st.session_state.checklist, logo_path)
+    pdf_content = generate_pdf(st.session_state['checklist'], logo_path)
     st.download_button(
         label="Download Checklist as PDF",
         data=pdf_content,
         file_name=f"checklist_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
         mime="application/pdf"
     )
+
 
 # Footer
 st.markdown('<div class="footer">All rights reserved | Created by ADev</div>', unsafe_allow_html=True)
