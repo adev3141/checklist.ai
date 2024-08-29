@@ -255,7 +255,7 @@ if not st.session_state['checklist']:
             inferred_season = infer_season(start_date)
 
             # Display the customizing message while generating the checklist
-            st.write("Musafir AI is customizing your travel checklist...")
+            st.write("Musafir AI is customizing your travel checklist.")
 
             st.session_state['prompt'] = gemini_model.create_prompt(responses, num_days, inferred_season)
             st.session_state['checklist'] = gemini_model.generate_checklist(st.session_state['prompt'])
