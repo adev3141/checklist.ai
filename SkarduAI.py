@@ -200,44 +200,65 @@ def format_checklist(checklist):
 
 # Main interaction flow
 if submit_button:
-    responses = {
-        'destination': destination,
-        'start_date': start_date,
-        'nights': nights,
-        'trip_type': trip_type,
-        'group_size': group_size,
-        'special_considerations': special_considerations
-    }
-    st.session_state.responses = responses
+    # Check for missing fields
+    missing_fields = []
+    if not destination:
+        missing_fields.append("destination")
+    if not start_date:
+        missing_fields.append("start_date")
+    if not nights:
+        missing_fields.append("nights")
+    if not trip_type:
+        missing_fields.append("trip_type")
+    if not group_size:
+        missing_fields.append("group_size")
+    if not special_considerations:
+        missing_fields.append("special_considerations")
 
-    # Calculate the number of days based on start date and nights
-    start_date = responses['start_date']
-    nights = int(responses['nights'])
-    end_date = start_date + datetime.timedelta(days=nights)
-    num_days = (end_date - start_date).days + 1
+    if missing_fields:
+        st.error("Missing information. Please fill in all fields.")
+        for field in missing_fields:
+            blink_field(field)
+    else:
+        responses = {
+            'destination': destination,
+            'start_date': start_date,
+            'nights': nights,
+            'trip_type': trip_type,
+            'group_size': group_size,
+            'special_considerations': special_considerations
+        }
+        st.session_state.responses = responses
 
-    # Infer season based on start date
-    inferred_season = infer_season(start_date)
+        # Calculate the number of days based on start date and nights
+        start_date = responses['start_date']
+        nights = int(responses['nights'])
+        end_date = start_date + datetime.timedelta(days=nights)
+        num_days = (end_date - start_date).days + 1
 
-    st.write("Generating your customized checklist...")
-    prompt = gemini_model.create_prompt(responses, num_days, inferred_season)
-    st.session_state.checklist = gemini_model.generate_checklist(prompt)
+        # Infer season based on start date
+        inferred_season = infer_season(start_date)
 
-    formatted_checklist = format_checklist(st.session_state.checklist)
-    
-    # Display the checklist
-    st.markdown(f'<div class="itinerary"><h4>Travel Checklist for {responses["destination"]} ({num_days} days, {inferred_season})</h4>{formatted_checklist}</div>', unsafe_allow_html=True)
+        st.write("Generating your customized checklist...")
+        prompt = gemini_model.create_prompt(responses, num_days, inferred_season)
+        st.session_state.checklist = gemini_model.generate_checklist(prompt)
 
-    # Generate and provide a download link for the PDF
-    if st.session_state.checklist:
-        logo_path = "logo/logo.png"
-        pdf_content = generate_pdf(st.session_state.checklist, logo_path)
-        st.download_button(
-            label="Download Checklist as PDF",
-            data=pdf_content,
-            file_name=f"checklist_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-            mime="application/pdf"
-        )
+        formatted_checklist = format_checklist(st.session_state.checklist)
+        
+        # Display the checklist
+        st.markdown(f'<div class="itinerary"><h4>Travel Checklist for {responses["destination"]} ({num_days} days, {inferred_season})</h4>{formatted_checklist}</div>', unsafe_allow_html=True)
+
+        # Generate and provide a download link for the PDF
+        if st.session_state.checklist:
+            logo_path = "logo/logo.png"
+            pdf_content = generate_pdf(st.session_state.checklist, logo_path)
+            st.download_button(
+                label="Download Checklist as PDF",
+                data=pdf_content,
+                file_name=f"checklist_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                mime="application/pdf"
+            )
 
 # Footer
 st.markdown('<div class="footer">All rights reserved | Created by ADev</div>', unsafe_allow_html=True)
+
